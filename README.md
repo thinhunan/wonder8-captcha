@@ -38,6 +38,7 @@ This is a lightweight, high-performance and easily horizontally scalable captcha
    2. 输出图片
    
 ![](./doc/images/demo6.png)
+
 4. 用户根据提示，依次点选，客户端将用户点选的坐标提交到服务端verify?code=&lt;code&gt;&x1=......
 ```bash
 request:http://localhost:8080/api/v1/verify?code=62ad3855b990f8fd0b44f201&x1=123&y1=53&x2=307&y2=72&x3=366&y3=185&x4=184&y4=55
@@ -47,7 +48,7 @@ response:true/false
    1. 根据code取得对应的captcha id
    2. 根据id 取出captcha数据
    3. 比对用户提交的坐标与数据
-   4. N个汉字的坐标的两两距离（ $$\sqrt{(x_1 - x_2)^2+(y_1-y_2)^2}$$ ）均 &lt; 阈值，则验证通过
+   4. N个汉字的坐标的两两距离($$\sqrt{(x_1 - x_2)^2+(y_1-y_2)^2}$$)均 &lt; 阈值，则验证通过
    5. redis中记录code的验证状态，供后续环节应用服务通过code来判断使用
    6. 返回验证结果，前端需注意一个code只能验证一回，失败需重走1开始的流程
 6. 应用服务器服务端调 check接口获得验证结果，注意key为简单密钥，不外泄
