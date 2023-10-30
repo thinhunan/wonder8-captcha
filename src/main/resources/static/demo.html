@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>captcha demo</title>
+</head>
+<body>
+    <p>请依次点击：</p>
+    <p id="captcha_text"></p>
+    <div id="container" style="width: 240px;height: 120px;position: relative">
+        <img id="captcha_image" style="width:100%;height:100%"/>
+        <img id="mark1" src="1.png" style="position: absolute;display: none;width: 16px;height: 16px"/>
+        <img id="mark2" src="2.png" style="position: absolute;display: none;width: 16px;height: 16px"/>
+        <img id="mark3" src="3.png" style="position: absolute;display: none;width: 16px;height: 16px"/>
+        <img id="mark4" src="4.png" style="position: absolute;display: none;width: 16px;height: 16px"/>
+    </div>
+
+<script type="text/javascript">
+    let code = '';
+    let clickCount = 1;
+    let clickPoints = [];
+
+    const container = document.querySelector("#container");
+    const img = document.querySelector("#captcha_image");
+    img.draggable = false;
+    const text = document.querySelector("#captcha_text");
+    const marks = [document.querySelector("#mark1"),
+        document.querySelector("#mark2"),
+        document.querySelector("#mark3"),
+        document.querySelector("#mark4")];
+
+    function createMark(x,y,index){
+        let img = marks[index-1];
+        img.style.left = (x - 8) + "px";
+        img.style.top = (y - 8) + "px";
+        img.style.display="block";
+    }
+
+    function removeMarks(){
+        marks.forEach(m=>m.style.display="none");
+    }
+
+    // 用户点字
+    function clickHandler(e){
+        clickPoints.push({ 'x': e.offsetX, 'y': e.offsetY });
+        createMark(e.offsetX, e.offsetY, clickCount);
+        console.log(clickPoints);
+        clickCount ++;
+        if(clickCount>4){
+            verify();
+        }
+    }
+
+    // step1, 请求应用服务，让它创建会话，返回code
+    function getCode(){
+        //需要从应用服务请求获得
+        code = "example";
+        registerNewCaptcha();
+    }
+
+    // step2, 将code注册到captcha-service，并且更新图片
+    function registerNewCaptcha(){
+        clickCount = 1;
+        clickPoints = [];
+        removeMarks();
+        fetch("api/v2/register?code="+code)//, { headers: { "Content-Type": "application/json; charset=utf-8" }})
+            .then(res => {
+                res.text().then(txt=> {
+                    text.innerHTML = txt;
+                    img.setAttribute("src", "api/v2/captcha?code="+code+"&timestamp="+new Date().getTime());
+                    img.onclick = clickHandler;
+                });
+            });
+    }
+
+    // step3, 将用户点击数据提交校验,获得校验结果
+    function verify(){
+        let url = ["api/v2/verify?code=example&"];
+        const ratio = img.naturalWidth / img.offsetWidth;
+        for(let i = 0 ; i < clickPoints.length ; i++){
+            url.push("x");
+            url.push(i+1);
+            url.push('=');
+            url.push(clickPoints[i].x * ratio);
+            url.push('&');
+            url.push("y");
+            url.push(i+1);
+            url.push('=');
+            url.push(clickPoints[i].y * ratio);
+            url.push('&');
+        }
+        url = url.join('');
+        fetch(url).then(res=>{
+            res.text().then(txt=>{
+                window.alert("验证结果："+txt);
+                //step4, 如果成功通知应用服务从服务端调check接口，完成完整的验证会话
+                //if(txt == "true"){
+                //    doCallServerCheckResult();
+                //}
+                //else {//不成功，给新图重新点，
+                    // 每次都需要重新从应用服务获取新的code，重新开始验证流程
+                    getCode();
+                //}
+            });
+        });
+    }
+
+    // begin procedure
+    getCode();
+
+</script>
+</body>
+</html>

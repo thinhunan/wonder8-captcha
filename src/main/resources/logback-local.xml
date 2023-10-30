@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="true" scan="true" scanPeriod="5 minutes">
+    <property name="MODULE" value="captcha-service"/>
+    <property name="BASE_PATH" value="./log/${MODULE}"/>
+    <property name="INFO_FILE" value="${BASE_PATH}/info"/>
+    <property name="ERROR_FILE" value="${BASE_PATH}/error"/>
+
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %X{remoteAddr} %X{hostname} [%thread] %-5level %logger{50} %X{uuid} %X{apiId} %X{errorCode} %X{productCode} - %msg%n"/>
+    <property name="CHARSET" value="utf8"/>
+    <property name="MAX_FILE_SIZE" value="50MB"/>
+    <property name="MAX_HISTORY" value="60"/>
+    <property name="TOTAL_SIZE_CAP" value="20GB"/>
+    <property name="ROLL_FILE_PATTERN" value="%d{yyyy-MM-dd}-%i.log.gz"/>
+    <property name="CALL_FILE" value="${BASE_PATH}/call"/>
+    <property name="GELF_HOST" value="thinhunan.github.com" />
+    <property name="GELF_PORT" value="12220" />
+
+    <appender name="gelf" class="me.moocar.logbackgelf.GelfUDPAppender">
+        <remoteHost>${GELF_HOST}</remoteHost>
+        <port>${GELF_PORT}</port>
+        <encoder class="me.moocar.logbackgelf.GZIPEncoder">
+            <layout class="me.moocar.logbackgelf.GelfLayout">
+                <shortMessageLayout class="ch.qos.logback.classic.PatternLayout">
+                    <pattern>%msg%n</pattern>
+                </shortMessageLayout>
+                <fullMessageLayout class="ch.qos.logback.classic.html.HTMLLayout">
+                    <pattern>%relative%thread%mdc%level%logger%msg</pattern>
+                </fullMessageLayout>
+                <useLoggerName>true</useLoggerName>
+                <useThreadName>true</useThreadName>
+                <useMarker>true</useMarker>
+                <host>${MODULE}</host>
+                <includeFullMDC>true</includeFullMDC>
+                <staticField class="me.moocar.logbackgelf.Field">
+                    <key>_facility</key>
+                    <value>DEVD_GELF</value>
+                </staticField>
+            </layout>
+        </encoder>
+    </appender>
+
+    <!-- console appender-->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>${CHARSET}</charset>
+        </encoder>
+    </appender>
+
+    <!-- info log appender-->
+    <appender name="infoFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>${CHARSET}</charset>
+        </encoder>
+        <file>${INFO_FILE}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${INFO_FILE}/${ROLL_FILE_PATTERN}</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender>
+
+    <!-- error log appender-->
+    <appender name="errorFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>${CHARSET}</charset>
+        </encoder>
+        <file>${ERROR_FILE}.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${ERROR_FILE}/${ROLL_FILE_PATTERN}</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="console"/>
+        <appender-ref ref="infoFile"/>
+        <appender-ref ref="errorFile"/>
+    </root>
+
+    <logger level="INFO" name="com.github.thinhunan" additivity="false">
+        <appender-ref ref="console"/>
+    </logger>
+
+
+</configuration>
