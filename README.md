@@ -27,18 +27,18 @@ This is a lightweight, high-performance and easily horizontally scalable captcha
    1. 服务端通过code查询captcha对象的id
    2. 如果redis中查不到对应的code，或者code数据已过期，则失败
 ### 验证流程
-1. 用户在客户端触发验证场景（比如点击验证码的输入框，或者点击 Captcha界面上的刷新图片按钮），客户端往自己的应用服务申请一个24位长的code(bson objectId格式)，然后再拿code请求Captcha服务register?code=<code>
+1. 用户在客户端触发验证场景（比如点击验证码的输入框，或者点击 Captcha界面上的刷新图片按钮），客户端往自己的应用服务申请一个24位长的code(bson objectId格式)，然后再拿code请求Captcha服务register?code=&lt;code&gt;
 2. captcha服务为这个code随机选择一个候选库中的captcha对象，将code与captcha对应的关系放在redis中保存一小段时间，然后返回文字（不包括坐标信息）给客户端
 ```bash   
   request: http://localhost:8080/api/v1/register?code=62ad3855b990f8fd0b44f201
   response: 哆,拴,汁,贾
  ```
-3. 客户端请求 captcha?code=<code>，显示captcha图片
+3. 客户端请求 captcha?code=&lt;code&gt;，显示captcha图片
    1. Request: http://localhost:8080/api/v1/captcha?code=62ad3855b990f8fd0b44f201
    2. 输出图片
    
 ![](./doc/images/demo6.png)
-4. 用户根据提示，依次点选，客户端将用户点选的坐标提交到服务端verify?code=<code>&x1=......
+4. 用户根据提示，依次点选，客户端将用户点选的坐标提交到服务端verify?code=&lt;code&gt;&x1=......
 ```bash
 request:http://localhost:8080/api/v1/verify?code=62ad3855b990f8fd0b44f201&x1=123&y1=53&x2=307&y2=72&x3=366&y3=185&x4=184&y4=55
 response:true/false
@@ -47,12 +47,12 @@ response:true/false
    1. 根据code取得对应的captcha id
    2. 根据id 取出captcha数据
    3. 比对用户提交的坐标与数据
-   4. N个汉字的坐标的两两距离（ $$\sqrt{(x_1 - x_2)^2+(y_1-y_2)^2}$$ ）均 < 阈值，则验证通过
+   4. N个汉字的坐标的两两距离（ $$\sqrt{(x_1 - x_2)^2+(y_1-y_2)^2}$$ ）均 &lt; 阈值，则验证通过
    5. redis中记录code的验证状态，供后续环节应用服务通过code来判断使用
    6. 返回验证结果，前端需注意一个code只能验证一回，失败需重走1开始的流程
 6. 应用服务器服务端调 check接口获得验证结果，注意key为简单密钥，不外泄
 ```bash
-request:http://localhost:8080/api/v1/check?code=62ad3855b990f8fd0b44f201&key=<secret-key>
+request:http://localhost:8080/api/v1/check?code=62ad3855b990f8fd0b44f201&key=&lt;secret-key&gt;
 response:true/false
 ```
 ### Java代码实现
@@ -62,7 +62,7 @@ response:true/false
    |- ScheduledPrepareCaptcha  -- 每秒更新数据  
    |- CaptchaConfig  
    |- controllers  
-   |- HomeController -- register/captcha/verify/check(server <--> server)<br/>
+   |- HomeController -- register/captcha/verify/check(server &lt;--&gt; server)<br/>
    |- modules  
    |- CaptchaText  -- 文字/位置 信息  
    |- Captcha -- 文字+图  
